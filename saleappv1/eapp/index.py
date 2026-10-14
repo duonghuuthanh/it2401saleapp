@@ -102,6 +102,14 @@ def index():
     return render_template('index.html', categories=categories, products=products)
 
 
+@app.route('/login')
+def login_view():
+    return render_template('login.html')
+
+@app.route('/register')
+def register_view():
+    return render_template('login.html')
+
 if __name__ == '__main__':
     with app.app_context():
         app.run(debug=True)
