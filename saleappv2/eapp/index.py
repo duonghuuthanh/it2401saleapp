@@ -1,7 +1,8 @@
 import math
 
-from flask import render_template, request
-from eapp import app, dao
+from flask import render_template, request, redirect
+from eapp import app, dao, login
+from flask_login import login_user, logout_user
 
 
 @app.route('/')
@@ -18,10 +19,45 @@ def index():
 def login_view():
     return render_template('login.html')
 
+@app.route('/login', methods=['post'])
+def login_process():
+    username = request.form.get('username')
+    password = request.form.get('password')
+
+    u = dao.authenticate(username=username, password=password)
+    if u:
+        login_user(user=u)
+
+    next = request.args.get('next')
+    if next:
+        return redirect(next)
+
+    return redirect('/admin')
+
+@app.route('/logout')
+def logout_process():
+    logout_user()
+    return redirect('/login')
 
 @app.route('/register')
 def register_view():
     return render_template('register.html')
+
+
+@app.route('/register', methods=['post'])
+def register_process():
+    password = request.form.get('password')
+    confirm = request.form.get('confirm')
+    print(password, confirm)
+
+    err_msg = ''
+    if not password or not confirm or password != confirm:
+        err_msg = 'Mật khẩu KHÔNG khớp!'
+    else:
+        # ...
+        return redirect('/login')
+
+    return render_template('register.html', err_msg=err_msg)
 
 @app.context_processor
 def common_responses():
@@ -29,6 +65,10 @@ def common_responses():
     return {
         'categories': dao.load_categories()
     }
+
+@login.user_loader
+def get_user(user_id):
+    return dao.get_user_by_id(user_id)
 
 
 if __name__ == '__main__':
